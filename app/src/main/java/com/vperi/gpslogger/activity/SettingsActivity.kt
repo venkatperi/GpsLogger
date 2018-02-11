@@ -1,4 +1,4 @@
-package com.vperi.gpslogger
+package com.vperi.gpslogger.activity
 
 import android.annotation.TargetApi
 import android.content.Context
@@ -8,14 +8,10 @@ import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.preference.ListPreference
-import android.preference.Preference
-import android.preference.PreferenceActivity
-import android.preference.PreferenceFragment
-import android.preference.PreferenceManager
-import android.preference.RingtonePreference
+import android.preference.*
 import android.text.TextUtils
 import android.view.MenuItem
+import com.vperi.gpslogger.R
 
 /**
  * A [PreferenceActivity] that presents a set of application settings. On
@@ -28,6 +24,12 @@ import android.view.MenuItem
  * for more information on developing a Settings UI.
  */
 class SettingsActivity : AppCompatPreferenceActivity() {
+
+  private val fragmentNames = listOf(
+      PreferenceFragment::class,
+      GeneralPreferenceFragment::class,
+      DataSyncPreferenceFragment::class,
+      LocationPreferenceFragment::class).map { it.java.name }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -60,12 +62,7 @@ class SettingsActivity : AppCompatPreferenceActivity() {
    * This method stops fragment injection in malicious applications.
    * Make sure to deny any unknown fragments here.
    */
-  override fun isValidFragment(fragmentName: String): Boolean {
-    return PreferenceFragment::class.java.name == fragmentName
-        || GeneralPreferenceFragment::class.java.name == fragmentName
-        || DataSyncPreferenceFragment::class.java.name == fragmentName
-        || NotificationPreferenceFragment::class.java.name == fragmentName
-  }
+  override fun isValidFragment(fragmentName: String) = fragmentNames.contains(fragmentName)
 
   /**
    * This fragment shows general preferences only. It is used when the
@@ -78,49 +75,40 @@ class SettingsActivity : AppCompatPreferenceActivity() {
       addPreferencesFromResource(R.xml.pref_general)
       setHasOptionsMenu(true)
 
-      // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-      // to their values. When their values change, their summaries are
-      // updated to reflect the new value, per the Android Design
-      // guidelines.
       bindPreferenceSummaryToValue(findPreference("example_text"))
       bindPreferenceSummaryToValue(findPreference("example_list"))
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-      val id = item.itemId
-      if (id == android.R.id.home) {
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+      android.R.id.home -> {
         startActivity(Intent(activity, SettingsActivity::class.java))
-        return true
+        true
       }
-      return super.onOptionsItemSelected(item)
+      else -> super.onOptionsItemSelected(item)
     }
   }
 
   /**
-   * This fragment shows notification preferences only. It is used when the
+   * This fragment shows general preferences only. It is used when the
    * activity is showing a two-pane settings UI.
    */
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-  class NotificationPreferenceFragment : PreferenceFragment() {
+  class LocationPreferenceFragment : PreferenceFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
       super.onCreate(savedInstanceState)
-      addPreferencesFromResource(R.xml.pref_notification)
+      addPreferencesFromResource(R.xml.pref_location)
       setHasOptionsMenu(true)
 
-      // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-      // to their values. When their values change, their summaries are
-      // updated to reflect the new value, per the Android Design
-      // guidelines.
-      bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"))
+      bindPreferenceSummaryToValue(findPreference("example_text"))
+      bindPreferenceSummaryToValue(findPreference("example_list"))
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-      val id = item.itemId
-      if (id == android.R.id.home) {
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+      android.R.id.home -> {
         startActivity(Intent(activity, SettingsActivity::class.java))
-        return true
+        true
       }
-      return super.onOptionsItemSelected(item)
+      else -> super.onOptionsItemSelected(item)
     }
   }
 
@@ -164,13 +152,12 @@ class SettingsActivity : AppCompatPreferenceActivity() {
       if (preference is ListPreference) {
         // For list preferences, look up the correct display value in
         // the preference's 'entries' list.
-        val listPreference = preference
-        val index = listPreference.findIndexOfValue(stringValue)
+        val index = preference.findIndexOfValue(stringValue)
 
         // Set the summary to reflect the new value.
         preference.setSummary(
             if (index >= 0)
-              listPreference.entries[index]
+              preference.entries[index]
             else
               null)
 

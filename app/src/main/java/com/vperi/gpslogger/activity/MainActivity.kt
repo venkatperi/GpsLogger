@@ -1,4 +1,4 @@
-package com.vperi.gpslogger
+package com.vperi.gpslogger.activity
 
 /**
  * Copyright 2017 Google Inc. All Rights Reserved.
@@ -23,7 +23,6 @@ import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
-import android.preference.PreferenceManager
 import android.provider.Settings
 import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
@@ -32,45 +31,28 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Button
+import android.widget.Toast
+import com.anadeainc.rxbus.BusProvider
+import com.anadeainc.rxbus.Subscribe
+import com.vperi.gpslogger.BuildConfig
+import com.vperi.gpslogger.R
+import com.vperi.gpslogger.Utils
+import com.vperi.gpslogger.service.LocationUpdatesService
+import com.vperi.util.FirebaseAuthHelper
 
+class MainActivity : AppCompatActivity() {
+  private val bus = BusProvider.getInstance()
 
-/**
- * The only activity in this sample.
- *
- * Note: for apps running in the background on "O" devices (regardless of the targetSdkVersion),
- * location may be computed less frequently than requested when the app is not in the foreground.
- * Apps that use a foreground service -  which involves displaying a non-dismissable
- * notification -  can bypass the background location limits and request location updates as before.
- *
- * This sample uses a long-running bound and started service for location updates. The service is
- * aware of foreground status of this activity, which is the only bound client in
- * this sample. After requesting location updates, when the activity ceases to be in the foreground,
- * the service promotes itself to a foreground service and continues receiving location updates.
- * When the activity comes back to the foreground, the foreground service stops, and the
- * notification associated with that foreground service is removed.
- *
- * While the foreground service notification is displayed, the user has the option to launch the
- * activity from the notification. The user can also remove location updates directly from the
- * notification. This dismisses the notification and stops the service.
- */
-class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
+  private val authHelper by lazy { FirebaseAuthHelper() }
 
   // The BroadcastReceiver used to listen from broadcasts from the service.
-  private var myReceiver: MyReceiver? = null
+  private val myReceiver: MyReceiver? by lazy { MyReceiver() }
 
   // A reference to the service used to get location updates.
   private var mService: LocationUpdatesService? = null
 
   // Tracks the bound state of the service.
   private var mBound = false
-
-  private var fcm: Fcm? = null
-  private var owntracksTid: String = ""
-
-  // UI elements.
-  private var mRequestLocationUpdatesButton: Button? = null
-  private var mRemoveLocationUpdatesButton: Button? = null
 
   // Monitors the state of the connection to the service.
   private val mServiceConnection = object : ServiceConnection {
@@ -80,6 +62,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
       val binder = service as LocationUpdatesService.LocalBinder
       mService = binder.service
       mBound = true
+      checkOrRequestPermissions()
     }
 
     override fun onServiceDisconnected(name: ComponentName) {
@@ -100,51 +83,47 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         startActivity(Intent(this, SettingsActivity::class.java))
         true
       }
+      R.id.map -> {
+        startActivity(Intent(this, MapsActivity::class.java))
+        true
+      }
+      R.id.login -> {
+        startActivity(Intent(this, GoogleSignInActivity::class.java))
+        true
+      }
       else -> super.onOptionsItemSelected(item)
     }
   }
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-
-    if (!checkPermissions()) {
+  private fun checkOrRequestPermissions() {
+    if (checkPermissions()) {
+      bus.post(PermissionGrant(Manifest.permission.ACCESS_FINE_LOCATION))
+    } else {
       requestPermissions()
     }
+  }
 
-    myReceiver = MyReceiver()
+  private fun checkOrAuthenticateUser() {
+    if (authHelper.isAuthenticated)
+      bus.post(AuthenticatedUser())
+    else {
+      authenticateUser()
+    }
+  }
+
+  private fun authenticateUser() {
+    startActivity(Intent(this, GoogleSignInActivity::class.java))
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    bus.register(this)
     setContentView(R.layout.activity_main)
   }
 
-
   override fun onStart() {
     super.onStart()
-    PreferenceManager.getDefaultSharedPreferences(this)
-        .registerOnSharedPreferenceChangeListener(this)
-
-    mRequestLocationUpdatesButton = findViewById(R.id.request_location_updates_button)
-    mRemoveLocationUpdatesButton = findViewById(R.id.remove_location_updates_button)
-
-    mRequestLocationUpdatesButton!!.setOnClickListener {
-      if (checkPermissions()) {
-        mService!!.requestLocationUpdates()
-      } else {
-        requestPermissions()
-      }
-    }
-
-    mRemoveLocationUpdatesButton!!.setOnClickListener { mService!!.removeLocationUpdates() }
-
-    // Restore the state of the buttons when the activity (re)launches.
-    setButtonsState(Utils.requestingLocationUpdates(this))
-
-    // Bind to the service. If the service is in foreground mode, this signals to the service
-    // that since this activity is in the foreground, the service can exit foreground mode.
-    bindService(Intent(this, LocationUpdatesService::class.java), mServiceConnection,
-        Context.BIND_AUTO_CREATE)
-
-    fcm = Fcm(Utils.fcmSenderId(this))
-    owntracksTid = Utils.owntracksTid(this)
-    fcm!!.sendUpstreamMessage("hello", "world")
+    checkOrRequestPermissions()
   }
 
   override fun onResume() {
@@ -164,22 +143,38 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
       // in the foreground, and the service can respond by promoting itself to a foreground
       // service.
       unbindService(mServiceConnection)
-      mBound = false
     }
-    PreferenceManager.getDefaultSharedPreferences(this)
-        .unregisterOnSharedPreferenceChangeListener(this)
     super.onStop()
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    bus.unregister(this)
+  }
+
+  @Subscribe
+  fun onPermissionGrant(grant: PermissionGrant) {
+    when (grant.permission) {
+      Manifest.permission.ACCESS_FINE_LOCATION -> startService()
+    }
+  }
+
+  private fun startService() {
+    Log.d(TAG, "starting service")
+    startService(Intent(applicationContext, LocationUpdatesService::class.java))
   }
 
   /**
    * Returns the current state of the permissions needed.
    */
   private fun checkPermissions(): Boolean {
+    Log.d(TAG, "checkPermissions")
     return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this,
         Manifest.permission.ACCESS_FINE_LOCATION)
   }
 
   private fun requestPermissions() {
+    Log.d(TAG, "requestPermissions")
     val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(this,
         Manifest.permission.ACCESS_FINE_LOCATION)
 
@@ -213,34 +208,33 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
    * Callback received when a permissions request has been completed.
    */
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
-                                          grantResults: IntArray) {
+      grantResults: IntArray) {
     Log.i(TAG, "onRequestPermissionResult")
     if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
       when {
-        grantResults.isEmpty() -> // If user interaction was interrupted, the permission request is cancelled and you
+        grantResults.isEmpty() ->
+          // If user interaction was interrupted, the permission request is cancelled and you
           // receive empty arrays.
           Log.i(TAG, "User interaction was cancelled.")
-        grantResults[0] == PackageManager.PERMISSION_GRANTED -> // Permission was granted.
-          mService!!.requestLocationUpdates()
-        else -> {
-          // Permission denied.
-          setButtonsState(false)
-          Snackbar.make(
-              findViewById(R.id.activity_main),
-              R.string.permission_denied_explanation,
-              Snackbar.LENGTH_INDEFINITE)
-              .setAction(R.string.settings, {
-                // Build intent that displays the App settings screen.
-                val intent = Intent()
-                intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                val uri = Uri.fromParts("package",
-                    BuildConfig.APPLICATION_ID, null)
-                intent.data = uri
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                startActivity(intent)
-              })
-              .show()
-        }
+
+        grantResults[0] == PackageManager.PERMISSION_GRANTED ->
+          bus.post(PermissionGrant(Manifest.permission.ACCESS_FINE_LOCATION))
+
+        else -> Snackbar.make(
+            findViewById(R.id.activity_main),
+            R.string.permission_denied_explanation,
+            Snackbar.LENGTH_INDEFINITE)
+            .setAction(R.string.settings, {
+              // Build intent that displays the App settings screen.
+              val intent = Intent()
+              intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+              val uri = Uri.fromParts("package",
+                  BuildConfig.APPLICATION_ID, null)
+              intent.data = uri
+              intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+              startActivity(intent)
+            })
+            .show()
       }
     }
   }
@@ -252,35 +246,18 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     override fun onReceive(context: Context, intent: Intent) {
       val location: Location? = intent.getParcelableExtra(LocationUpdatesService.EXTRA_LOCATION)
       if (location != null) {
-//        Toast.makeText(this@MainActivity, Utils.getLocationText(location), Toast.LENGTH_SHORT).show()
-//        fcm!!.sendUpstreamMessage(Utils.locationToOwnTracks(location, owntracksTid))
+        Toast.makeText(this@MainActivity, Utils.getLocationText(location), Toast.LENGTH_SHORT).show()
       }
     }
   }
 
-  override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, s: String) {
-    Log.d(TAG, s)
-    // Update the buttons state depending on whether location updates are being requested.
-    if (s == Utils.KEY_REQUESTING_LOCATION_UPDATES) {
-      setButtonsState(sharedPreferences.getBoolean(Utils.KEY_REQUESTING_LOCATION_UPDATES,
-          false))
-    }
-  }
-
-  private fun setButtonsState(requestingLocationUpdates: Boolean) {
-    if (requestingLocationUpdates) {
-      mRequestLocationUpdatesButton!!.isEnabled = false
-      mRemoveLocationUpdatesButton!!.isEnabled = true
-    } else {
-      mRequestLocationUpdatesButton!!.isEnabled = true
-      mRemoveLocationUpdatesButton!!.isEnabled = false
-    }
-  }
+  inner class PermissionGrant(var permission: String)
+  class AuthenticatedUser
 
   companion object {
     private val TAG = MainActivity::class.java.simpleName
 
     // Used in checking for runtime permissions.
-    private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
+    private const val REQUEST_PERMISSIONS_REQUEST_CODE = 34
   }
 }

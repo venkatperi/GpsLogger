@@ -1,0 +1,32 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- NOTE: EditTextPreference accepts EditText attributes. -->
+    <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
+
+    <!-- NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
+         dismiss it. -->
+    <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
+
+    <EditTextPreference
+        android:defaultValue="@integer/pref_location_update_interval_default"
+        android:key="@string/pref_location_update_interval"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="Set the desired interval for active location updates, in milliseconds.  "
+        android:title="@string/pref_location_update_interval_title" />
+    <EditTextPreference
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:defaultValue="@integer/pref_location_fastest_update_interval_default"
+        android:key="@string/pref_location_fastest_update_interval"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="Explicitly set the fastest interval for location updates, in milliseconds.  "
+        android:title="@string/pref_location_fastest_update_interval_title" />
+    <ListPreference
+        android:defaultValue="1"
+        android:entries="@array/pref_location_priority_entries"
+        android:entryValues="@array/pref_location_priority_entry_values"
+        android:key="@string/pref_location_priority"
+        android:title="@string/pref_location_priority_title" />
+</PreferenceScreen>

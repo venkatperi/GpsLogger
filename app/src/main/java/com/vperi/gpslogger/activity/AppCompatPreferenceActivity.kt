@@ -1,4 +1,4 @@
-package com.vperi.gpslogger
+package com.vperi.gpslogger.activity
 
 import android.content.res.Configuration
 import android.os.Bundle

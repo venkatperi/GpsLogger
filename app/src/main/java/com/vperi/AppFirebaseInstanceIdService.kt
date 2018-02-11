@@ -1,21 +1,19 @@
 package com.vperi
 
 import android.util.Log
-import com.google.firebase.iid.FirebaseInstanceIdService
 import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.iid.FirebaseInstanceIdService
+import com.vperi.gpslogger.R
+import com.vperi.util.PrefHelper
 
-class AppFirebaseInstanceIdService: FirebaseInstanceIdService() {
+class AppFirebaseInstanceIdService : FirebaseInstanceIdService() {
+  private val prefs by lazy { PrefHelper(this) }
+
   override fun onTokenRefresh() {
-    // Get updated InstanceID token.
     val refreshedToken = FirebaseInstanceId.getInstance().token
     Log.d(TAG, "Refreshed token: " + refreshedToken!!)
-
-    // If you want to send messages to this application instance or
-    // manage this apps subscriptions on the server side, send the
-    // Instance ID token to your app server.
-//    sendRegistrationToServer(refreshedToken)
+    prefs[R.string.firebase_instance_id_token] = refreshedToken
   }
-
 
   companion object {
     private val TAG = AppFirebaseInstanceIdService::class.java.simpleName
