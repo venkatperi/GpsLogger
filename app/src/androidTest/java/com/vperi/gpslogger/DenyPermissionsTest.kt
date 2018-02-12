@@ -1,17 +1,13 @@
 package com.vperi.gpslogger
 
-import android.os.Build
 import android.support.test.InstrumentationRegistry
-import android.support.test.espresso.Espresso.onView
-import android.support.test.espresso.matcher.ViewMatchers.withText
 import android.support.test.filters.MediumTest
-import android.support.test.rule.GrantPermissionRule
 import android.support.test.runner.AndroidJUnit4
 import com.vperi.gpslogger.task.BaseTask
 import com.vperi.gpslogger.task.CheckPermissionsTask
+import com.vperi.gpslogger.test.Utils.clickPermissionsDialog
 import net.jodah.concurrentunit.Waiter
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -22,15 +18,10 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CheckPermissionsTaskTest {
+class DenyPermissionsTest {
   private var task: BaseTask? = null
   private var waiter: Waiter? = null
-  @Rule
-  @JvmField
-  var permissionRule = GrantPermissionRule.grant(android.Manifest.permission.ACCESS_FINE_LOCATION)
-
-  init {
-  }
+//  @Rule @JvmField var permissionRule = GrantPermissionRule.grant( android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.READ_CONTACTS)
 
   @Before
   fun before() {
@@ -39,14 +30,16 @@ class CheckPermissionsTaskTest {
   }
 
   @Test
-  fun start() {
+  fun verifyPermissions() {
     task!!.start()
-    onView(withText("Allow GpsLogger"))
+    clickPermissionsDialog(false)
+    clickPermissionsDialog(false)
 
     task!!.promise
-        .success { waiter!!.resume() }
-        .fail { waiter!!.fail() }
+        .fail { waiter!!.resume() }
+        .success { waiter!!.fail() }
     waiter!!.await(10000)
   }
+
 }
 

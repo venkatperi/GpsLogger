@@ -1,15 +1,12 @@
 package com.vperi.util
 
 import android.content.Context
-import com.anadeainc.rxbus.BusProvider
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.vperi.gpslogger.R
 
 class FirebaseRemoteConfigHelper(var context: Context) {
-  private val bus = BusProvider.getInstance()
-
-  var remoteConfig = FirebaseRemoteConfig.getInstance()
+  var remoteConfig = FirebaseRemoteConfig.getInstance()!!
 
   var developerMode = true
 
@@ -21,23 +18,23 @@ class FirebaseRemoteConfigHelper(var context: Context) {
     val remoteConfigSettings = FirebaseRemoteConfigSettings.Builder()
         .setDeveloperModeEnabled(developerMode)
         .build()
-    remoteConfig.setConfigSettings(remoteConfigSettings)
-    remoteConfig.setDefaults(R.xml.remote_config_defaults);
+    with(remoteConfig) {
+      setConfigSettings(remoteConfigSettings)
+      setDefaults(R.xml.remote_config_defaults)
+      if (info.configSettings.isDeveloperModeEnabled) {
+        cacheExpiration = 0
+      }
 
-    if (remoteConfig.info.configSettings.isDeveloperModeEnabled) {
-      cacheExpiration = 0
+      fetch(cacheExpiration)
+          .addOnCompleteListener({ task ->
+            if (task.isSuccessful) {
+              remoteConfig.activateFetched()
+              fetched = true
+            } else {
+              //task failed
+            }
+          })
     }
-
-    remoteConfig
-        .fetch(cacheExpiration)
-        .addOnCompleteListener({ task ->
-          if (task.isSuccessful) {
-            remoteConfig.activateFetched()
-            fetched = true
-          } else {
-            //task failed
-          }
-        })
   }
 
   inline operator fun <reified T : Any> get(key: Int): T? =

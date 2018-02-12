@@ -6,7 +6,11 @@ import android.os.Looper
 import android.util.Log
 import com.anadeainc.rxbus.BusProvider
 import com.anadeainc.rxbus.Subscribe
-import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 import com.vperi.gpslogger.R
 import org.json.JSONObject
 
@@ -127,7 +131,7 @@ fun Location.toMap(): Map<String, String> {
   if (hasAltitude()) res["altitude"] = altitude.toString()
   if (hasSpeed()) res["speed"] = speed.toString()
   if (hasBearing()) res["bearing"] = bearing.toString()
-  if (extras != null) res["extras"] = extras.toString()
+//  if (extras != null) res["extras"] = extras.toString()
 
   return res
 }

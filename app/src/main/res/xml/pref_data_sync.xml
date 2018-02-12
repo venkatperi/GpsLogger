@@ -8,10 +8,10 @@
          design guidelines. -->
 
     <EditTextPreference
-        android:key="fcm_sender_id"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="@string/pref_fcm_sender_id_title" />
+            android:key="fcm_sender_id"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/user_username"/>
     <EditTextPreference
         android:key="owntracks_tid"
         android:selectAllOnFocus="true"

@@ -20,9 +20,12 @@ class FcmHelper(var context: Context) {
   }
 
   fun sendUpstreamMessage(data: Map<String, String>) {
-    sendUpstreamMessage(RemoteMessage.Builder("$senderId@gcm.googleapis.com")
+    Log.d(TAG, "sendUpstreamMessage: $data")
+    val builder = RemoteMessage.Builder("$senderId@gcm.googleapis.com")
         .setMessageId(Integer.toString(msgId++))
-        .setData(data))
+        .setData(data)
+
+    sendUpstreamMessage(builder)
   }
 
   private fun sendUpstreamMessage(builder: RemoteMessage.Builder) {

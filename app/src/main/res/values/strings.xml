@@ -142,6 +142,11 @@
 
     <string name="firebase_status_fmt">Firebase User: %s</string>
     <string name="firebase_user_management">Firebase User Management</string>
+    <string name="auth_action">auth_action</string>
+    <string name="sign_in">sign_in</string>
+    <string name="revoke_access">revoke_access</string>
+    <string name="user_username">Username</string>
+    <string name="firebase_app_instance_id">firebase_app_instance_id</string>
 
 
 </resources>

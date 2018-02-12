@@ -15,17 +15,27 @@
  */
 package com.vperi.gpslogger.service
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.location.Location
-import android.os.*
+import android.os.Binder
+import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.IBinder
 import android.support.annotation.RequiresApi
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import com.anadeainc.rxbus.BusProvider
 import com.anadeainc.rxbus.Subscribe
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.iid.FirebaseInstanceId
 import com.vperi.gpslogger.R
 import com.vperi.gpslogger.Utils
 import com.vperi.gpslogger.activity.MainActivity
@@ -163,7 +173,18 @@ class LocationUpdatesService : Service() {
 
   @Subscribe
   fun onNewLocation(location: Location) {
-    fcmHelper.sendUpstreamMessage(location.toMap())
+    val msg: HashMap<String, String> = HashMap(location.toMap())
+    msg["_type"] = "location"
+
+    FirebaseAuth.getInstance().currentUser?.let {
+      msg["user_id"] = it.uid
+    }
+
+    FirebaseInstanceId.getInstance()?.let {
+      msg["app_instance_id"] = it.id
+    }
+
+    fcmHelper.sendUpstreamMessage(msg)
 
     // Notify anyone listening for broadcasts about the new location.
     val intent = Intent(ACTION_BROADCAST)
@@ -192,6 +213,5 @@ class LocationUpdatesService : Service() {
      * The identifier for the notification displayed for the foreground service.
      */
     private val NOTIFICATION_ID = 12345678
-
   }
 }

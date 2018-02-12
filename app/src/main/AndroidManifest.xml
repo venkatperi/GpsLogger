@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.vperi.gpslogger">
+          package="com.vperi.gpslogger">
 
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.READ_PROFILE" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.READ_PROFILE"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
 
     <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/AppTheme">
+        <activity android:name=".activity.MainActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN"/>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
 
         <service
-            android:name=".LocationUpdatesService"
-            android:enabled="true"
-            android:exported="true" />
+                android:name=".service.LocationUpdatesService"
+                android:enabled="true"
+                android:exported="true"/>
         <service
-            android:name="com.vperi.AppFirebaseInstanceIdService"
-            android:exported="true">
+                android:name="com.vperi.AppFirebaseInstanceIdService"
+                android:exported="true">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>
         </service>
-        <service android:name=".service.ControlService" />
+        <service android:name=".service.ControlService"/>
 
         <activity
-            android:name=".activity.SettingsActivity"
-            android:label="@string/title_activity_settings" />
+                android:name=".activity.SettingsActivity"
+                android:label="@string/title_activity_settings"/>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -47,16 +47,16 @@
              You can define the keys for the debug and release targets in src/debug/ and src/release/. 
         -->
         <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_key" />
+                android:name="com.google.android.geo.API_KEY"
+                android:value="@string/google_maps_key"/>
 
         <activity
-            android:name=".activity.MapsActivity"
-            android:label="@string/title_activity_maps" />
-        <activity
-            android:name=".activity.LoginActivity"
-            android:label="@string/title_activity_login"></activity>
-        <activity android:name=".activity.GoogleSignInActivity" />
+                android:name=".activity.MapsActivity"
+                android:label="@string/title_activity_maps"/>
+
+        <activity android:name=".activity.GoogleSignInActivity"/>
+
+        <activity android:name=".activity.GoogleAuthActivity"/>
     </application>
 
 </manifest>

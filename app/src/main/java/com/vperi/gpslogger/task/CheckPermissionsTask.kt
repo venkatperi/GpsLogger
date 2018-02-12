@@ -5,7 +5,7 @@ import android.util.Log
 import com.vperi.simplepermissions.PermissionHandler
 import com.vperi.simplepermissions.Permissions
 
-class CheckPermissionsTask(context: Context) : BaseTask(context) {
+class CheckPermissionsTask(context: Context, autoStart: Boolean) : BaseTask(context, autoStart) {
 
   override fun start() {
     val permissions = Permissions.getRequestedPermissions(context)!!
