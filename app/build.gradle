@@ -34,12 +34,20 @@ dependencies {
     implementation 'com.android.support:support-vector-drawable:26.1.0'
     compile 'com.android.support:design:26.1.0'
     compile 'com.github.anadea:rxbus:1.0.1'
+    compile project(path: ':simplepermissions')
+    compile 'nl.komponents.kovenant:kovenant:3.3.0'
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+
     testImplementation 'junit:junit:4.12'
+    testCompile "org.mockito:mockito-core:2.8.9"
+    testCompile group: 'net.jodah', name: 'concurrentunit', version: '0.4.3'
+    androidTestCompile group: 'net.jodah', name: 'concurrentunit', version: '0.4.3'
+
+    testCompile "com.nhaarman:mockito-kotlin:1.5.0"
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
 }

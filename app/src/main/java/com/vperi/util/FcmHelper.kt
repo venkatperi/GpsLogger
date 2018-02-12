@@ -1,13 +1,10 @@
 package com.vperi.util
 
 import android.content.Context
+import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import com.vperi.gpslogger.R
-
-/**
- * Created by venkat on 2/8/18.
- */
 
 class FcmHelper(var context: Context) {
   private val remoteConfig by lazy { FirebaseRemoteConfigHelper(context) }
@@ -17,6 +14,7 @@ class FcmHelper(var context: Context) {
   private val senderId: String
     get() = remoteConfig[R.string.fcm_sender_id]!!
 
+  @Suppress("unused")
   fun sendUpstreamMessage(key: String, value: String) {
     sendUpstreamMessage(mapOf(key to value))
   }
@@ -27,7 +25,8 @@ class FcmHelper(var context: Context) {
         .setData(data))
   }
 
-  fun sendUpstreamMessage(builder: RemoteMessage.Builder) {
+  private fun sendUpstreamMessage(builder: RemoteMessage.Builder) {
+    Log.d(TAG, "sendUpstreamMessage")
     val fm = FirebaseMessaging.getInstance()
     fm.send(builder.build())
   }

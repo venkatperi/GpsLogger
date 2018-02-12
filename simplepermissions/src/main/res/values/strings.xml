@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">SimplePermissions</string>
+    <string name="permission_denied">Permission Denied.</string>
+</resources>
